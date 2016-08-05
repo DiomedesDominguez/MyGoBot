@@ -1,0 +1,385 @@
+﻿<Window x:Class="PGB.WPF.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PGB.WPF.Views"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:gmap="clr-namespace:GMap.NET.WindowsPresentation;assembly=GMap.NET.WindowsPresentation"
+        xmlns:enumalias="clr-namespace:PokemonGo.RocketAPI.Enums;assembly=PokemonGo.RocketAPI"
+        xmlns:generatedCodeAlias="clr-namespace:PokemonGo.RocketAPI.GeneratedCode;assembly=PokemonGo.RocketAPI"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        Loaded="Window_Loaded" Closing="Window_Closing" Title="MainWindow" Height="475" Width="850"
+        WindowStartupLocation="CenterScreen" FocusManager.FocusedElement="{Binding ElementName=txtToken}"
+        mc:Ignorable="d">
+    <FrameworkElement.Resources>
+        <ObjectDataProvider x:Key="auths" MethodName="GetNames" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enumalias:AuthType"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        <ObjectDataProvider x:Key="pokemonIds" MethodName="GetNames" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="generatedCodeAlias:PokemonId"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </FrameworkElement.Resources>
+    <xctk:BusyIndicator Name="busyIndicator">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Background="#ECECEC" BorderBrush="LightGray" BorderThickness="2" CornerRadius="4"
+              Margin="3">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0">
+            <FrameworkElement.Style>
+              <Style TargetType="{x:Type TextBlock}">
+                <Setter Property="FrameworkElement.Margin" Value="5, 5, 5, 1"/>
+                <Setter Property="TextBlock.Text" Value="{Binding Status, StringFormat='Status: {0}'}"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Status, TargetNullValue=0}" Value="0">
+                    <Setter Property="TextBlock.Text" Value="Status: Ready"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </FrameworkElement.Style>
+                    </TextBlock>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="5, 1, 5, 1"
+                     Text="{Binding CpuUsage, StringFormat='CPU: {0:N0}%'}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="5, 1, 5, 5">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Memory: {0:N0} (MB)">
+                                <Binding Path="MemoryUsage" Converter="{StaticResource MathConverter}" ConverterParameter="x/1048576"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+
+                </Grid>
+            </Border>
+            <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+                <TabItem Header="General"
+                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Runtime:</Label>
+                                <Label Grid.Row="0" Grid.Column="1" Content="{Binding Statistics.Runtime}"/>
+                                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Player name:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Statistics.PlayerName}"/>
+                                <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Level:</Label>
+                                <Label Grid.Row="2" Grid.Column="1" Content="{Binding Statistics.CurrentLevelInfos}"/>
+                                <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">EXP (P/HR):</Label>
+                                <Label Grid.Row="3" Grid.Column="1">
+                                    <ContentControl.Content>
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="({0}) ({1})">
+                                                    <Binding Path="Statistics.TotalExperience"/>
+                                                    <Binding Path="Statistics.EXPPerHour"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </ContentControl.Content>
+                                </Label>
+                                <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Pokemon (P/HR):</Label>
+                                <Label Grid.Row="4" Grid.Column="1">
+                                    <ContentControl.Content>
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="({0}) ({1})">
+                                                    <Binding Path="Statistics.TotalPokemons"/>
+                                                    <Binding Path="Statistics.PokemonPerHour"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </ContentControl.Content>
+                                </Label>
+                                <Label Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">Stardust:</Label>
+                                <Label Grid.Row="5" Grid.Column="1" Content="{Binding Statistics.TotalStardust}"/>
+                                <Label Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                                    Pokemon Transferred:
+                                </Label>
+                                <Label Grid.Row="6" Grid.Column="1" Content="{Binding Statistics.TotalPokemonsTransfered}"/>
+                                <Label Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">Items Recycled:</Label>
+                                <Label Grid.Row="7" Grid.Column="1" Content="{Binding Statistics.TotalItemsRemoved}"/>
+                            </Grid>
+                        </ScrollViewer>
+                        <gmap:GMapControl Name="gMap" Margin="3" Grid.Row="0" Grid.Column="1" CanDragMap="false"
+                              MouseWheelZoomType="ViewCenter" MinZoom="0" MaxZoom="18" Zoom="16"
+                              MapProvider="{Binding GMapProvider}"/>
+                        <Button Click="btnStartStop_Click" Name="btnStartStop" Grid.Row="1" Grid.Column="0" Width="200">Start Bot</Button>
+                        <Button Click="btnOpenLogsDirectory_Click" Name="btnOpenLogsDirectory" Grid.Row="1" Grid.Column="1"
+                    Width="200">Open Logs Directory</Button>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Configuration"
+                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ScrollViewer>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Login Type:</Label>
+                            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource auths}}"
+                        SelectedItem="{Binding Path=AuthType, Converter={StaticResource AuthTypeEnumToStringConverter}}"/>
+                            <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+                                Google/PTC Username:
+                            </Label>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding LoginUsername}"/>
+                            <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">
+                                Google/PTC Password:
+                            </Label>
+                            <TextBox Name="txtPassword" Grid.Row="2" Grid.Column="1" Text="{Binding LoginPassword}"/>
+                            <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">Latitude:</Label>
+                            <xctk:DoubleUpDown Grid.Row="3" Grid.Column="1" Increment="1" Value="{Binding DefaultLatitude}"/>
+                            <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Longitude:</Label>
+                            <xctk:DoubleUpDown Grid.Row="4" Grid.Column="1" Increment="1" Value="{Binding DefaultLongitude}"/>
+                            <Label Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">Altitude:</Label>
+                            <xctk:IntegerUpDown Grid.Row="5" Grid.Column="1" Increment="1" Minimum="1" Value="{Binding DefaultAltitude}"/>
+                            <Label Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                                Keep Min IV Percentage:
+                            </Label>
+                            <xctk:IntegerUpDown Grid.Row="6" Grid.Column="1" Increment="1" Minimum="1" Value="{Binding KeepMinIVPercentage}"/>
+                            <Label Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">Keep Min CP:</Label>
+                            <xctk:IntegerUpDown Grid.Row="7" Grid.Column="1" Increment="1" Minimum="1" Value="{Binding KeepMinCP}"/>
+                            <Label Grid.Row="8" Grid.Column="0" HorizontalAlignment="Right">
+                                Walking Speed (KM/HR):
+                            </Label>
+                            <xctk:IntegerUpDown Grid.Row="8" Grid.Column="1" Increment="1" Minimum="1"
+                                  Value="{Binding WalkingSpeedInKilometerPerHour}"/>
+                            <Label Grid.Row="9" Grid.Column="0" HorizontalAlignment="Right">Evolve Pokemon:</Label>
+                            <CheckBox Grid.Row="9" Grid.Column="1" IsChecked="{Binding EvolveAllPokemonWithEnoughCandy}"/>
+                            <Label Grid.Row="10" Grid.Column="0" HorizontalAlignment="Right">
+                                Transfer Duplicate Pokemon:
+                            </Label>
+                            <CheckBox Grid.Row="10" Grid.Column="1" IsChecked="{Binding TransferDuplicatePokemon}"/>
+                            <Label Grid.Row="11" Grid.Column="0" HorizontalAlignment="Right">
+                                Delay Between Pokemon Catch (ms):
+                            </Label>
+                            <xctk:IntegerUpDown Grid.Row="11" Grid.Column="1" Increment="1" Minimum="1" Value="{Binding DelayBetweenPokemonCatch}"/>
+                            <Label Grid.Row="12" Grid.Column="0" HorizontalAlignment="Right">
+                                Prioritize IV Over CP:
+                            </Label>
+                            <CheckBox Grid.Row="12" Grid.Column="1" IsChecked="{Binding PrioritizeIVOverCP}"/>
+                            <Label Grid.Row="13" Grid.Column="0" HorizontalAlignment="Right">
+                                Max Travel Distance (meters):
+                            </Label>
+                            <xctk:IntegerUpDown Grid.Row="13" Grid.Column="1" Increment="1" Minimum="1" Value="{Binding MaxTravelDistanceInMeters}"/>
+                            <Label Grid.Row="14" Grid.Column="0" HorizontalAlignment="Right">
+                                Use Lucky Eggs While Evolving:
+                            </Label>
+                            <CheckBox Grid.Row="14" Grid.Column="1" IsChecked="{Binding UseLuckyEggsWhileEvolving}"/>
+                            <Label Grid.Row="15" Grid.Column="0" HorizontalAlignment="Right">
+                                Evolve All Pokemon Above IV:
+                            </Label>
+                            <CheckBox Grid.Row="15" Grid.Column="1" IsChecked="{Binding EvolveAllPokemonAboveIV}"/>
+                            <Label Grid.Row="16" Grid.Column="0" HorizontalAlignment="Right">
+                                Evolve Above IV Value:
+                            </Label>
+                            <xctk:DoubleUpDown Grid.Row="16" Grid.Column="1" Increment="1" Value="{Binding EvolveAboveIVValue}"/>
+                            <Label Grid.Row="17" Grid.Column="0" HorizontalAlignment="Right">
+                                Only Farm Pokestops:
+                            </Label>
+                            <CheckBox Grid.Row="17" Grid.Column="1" IsChecked="{Binding OnlyFarmPokestops}"/>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Pokemon To Catch"
+                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <xctk:CheckListBox ItemSelectionChanged="clbPokemonToCatch_ItemSelectionChanged" Name="clbPokemonToCatch"
+                             ItemsSource="{Binding Source={StaticResource pokemonIds}}"/>
+                </TabItem>
+                <TabItem Header="Pokemon To Transfer"
+                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <xctk:CheckListBox Name="clbPokemonToTransfer" ItemsSource="{Binding Source={StaticResource pokemonIds}}"/>
+                </TabItem>
+                <TabItem Header="Pokemon To Evolve"
+                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <xctk:CheckListBox Name="clbPokemonToEvolve" ItemsSource="{Binding Source={StaticResource pokemonIds}}"/>
+                </TabItem>
+                <TabItem Header="Items"
+                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Margin="3" TextWrapping="Wrap" TextAlignment="Center">
+                Configure the maximum amount of each item to keep here. The bot will get rid of extras when it goes over the limit. This is to keep your item count down so you'll continue to receive items from Pokestops. If you never want the bot to get rid of the particular item, set its value to a high number (such as 5000).
+                            </TextBlock>
+                            <Grid Row="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Pokeball:</Label>
+                                <xctk:IntegerUpDown Grid.Row="0" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding PokeBallCount}"/>
+                                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Great Ball:</Label>
+                                <xctk:IntegerUpDown Grid.Row="1" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding GreatBallCount}"/>
+                                <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Ultra Ball:</Label>
+                                <xctk:IntegerUpDown Grid.Row="2" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding UltraBallCount}"/>
+                                <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">Master Ball:</Label>
+                                <xctk:IntegerUpDown Grid.Row="3" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding MasterBallCount}"/>
+                                <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Potion:</Label>
+                                <xctk:IntegerUpDown Grid.Row="4" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding PotionCount}"/>
+                                <Label Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">Super Potion:</Label>
+                                <xctk:IntegerUpDown Grid.Row="5" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding SuperPotionCount}"/>
+                                <Label Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">Hyper Potion:</Label>
+                                <xctk:IntegerUpDown Grid.Row="6" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding HyperPotionCount}"/>
+                                <Label Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">Max Potion:</Label>
+                                <xctk:IntegerUpDown Grid.Row="7" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding MaxPotionCount}"/>
+                                <Label Grid.Row="8" Grid.Column="0" HorizontalAlignment="Right">Revive:</Label>
+                                <xctk:IntegerUpDown Grid.Row="8" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding ReviveCount}"/>
+                                <Label Grid.Row="9" Grid.Column="0" HorizontalAlignment="Right">Max Revive:</Label>
+                                <xctk:IntegerUpDown Grid.Row="9" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding MaxReviveCount}"/>
+                                <Label Grid.Row="10" Grid.Column="0" HorizontalAlignment="Right">Razz Berry:</Label>
+                                <xctk:IntegerUpDown Grid.Row="10" Grid.Column="1" Increment="10" Minimum="0" Value="{Binding RazzBerryCount}"/>
+                            </Grid>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Help">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <TextBlock Margin="3" TextWrapping="Wrap">
+              If your question is not answered here please join our
+              <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://community.mygobot.org/">forums</Hyperlink>
+              to get help from the community or view the
+              <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="https://mygobot.org/help">help documentation</Hyperlink>
+              on our website.
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) What are latitude/longitude coordinates and what should I put?
+              </Run>
+              <LineBreak/>
+              A) Latitude and longitude refer to a specific coordinate on the Earth. You can find coordinates of any place on Earth easily by using
+              <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://www.latlong.net/">latlong.net</Hyperlink>
+              .
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) I'm getting something similar to "The parameter value should be -90.0 to 90.0. Parameter name: Latitude from System.Device"?
+              </Run>
+              <LineBreak/>
+              A) Depending on your localization periods (.) may not work. Try comma's in place of where you would put the periods (,).
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) I can't login or something about an "Exception", "nianticlabs.com", etc. keeps appearing over and over again?
+              </Run>
+              <LineBreak/>
+              A) Pokemon GO's servers may be under heavy load. If the problem doesn't resolve itself within a few minutes please try again later.
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) I can't login using PTC?
+              </Run>
+              <LineBreak/>
+              A) Pokemon GO PTC servers may be down. If the error message is something like "The Pokemon GO account you're using is not verified" you need to verify your PTC account (normally by email) before Pokemon GO will let you log in. Some users have also reported they needed to verify their Apple ID account (also known as iTunes account) as well.
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) I can't login using Google?
+              </Run>
+              <LineBreak/>
+              A) Enter the Google login information you signed up for Pokemon GO with in the configuration tab. If you have two factor authentication you'll need to create an app password. You can find instructions on how to do this
+              <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"
+                         NavigateUri="https://support.google.com/accounts/answer/185833?hl=en">here</Hyperlink>
+              .
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) What is GPX pathing?
+              </Run>
+              <LineBreak/>
+              A) GPX files are a predefined set of latitude/longitude coordinates that the bot will follow. This will give you full control over where your bot goes.
+              <LineBreak/>
+              <LineBreak/>
+              <Run FontWeight="Bold">
+                Q) I'm not catching any Pokemon or my EXP/HR is low, what should I do?
+              </Run>
+              <LineBreak/>
+              A) Come to our
+              <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://community.mygobot.org/">community forums</Hyperlink>
+              ! We have thousands of active users discussing the best places to bot.
+              <LineBreak/>
+                        </TextBlock>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+            <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
+            <ListBox Name="lbLog" Grid.Row="3"/>
+        </Grid>
+    </xctk:BusyIndicator>
+</Window>

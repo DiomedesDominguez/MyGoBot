@@ -1,0 +1,14 @@
+﻿<Application x:Class="PGB.WPF.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:PGB.WPF"
+             xmlns:converters="clr-namespace:PGB.WPF.Views.Converters"
+             StartupUri="Views/MainWindow.xaml">
+    <Application.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" True="Visible" False="Collapsed"/>
+        <converters:BooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter" True="Collapsed" False="Visible"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:MathConverter x:Key="MathConverter"/>
+        <converters:AuthTypeEnumToStringConverter x:Key="AuthTypeEnumToStringConverter"/>
+    </Application.Resources>
+</Application>
