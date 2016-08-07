@@ -1,10 +1,10 @@
 ﻿namespace PGB.WPF.Internals
 {
-    public enum AccountType
+    internal enum AccountType
     {
         Default,
         TrialExpired,
         TrialActive,
-        Purchased
+        Purchased,
     }
 }

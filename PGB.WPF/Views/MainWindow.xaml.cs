@@ -1,6 +1,7 @@
 ﻿namespace PGB.WPF.Views
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Reflection;
@@ -16,12 +17,15 @@
 
     using Internals;
 
+    using Logic;
+
     using Models;
 
     using NLog;
 
-    using PokemonGo.RocketAPI.GeneratedCode;
-    using PokemonGo.RocketAPI.Logic;
+    using PokemonGo.RocketAPI.Rpc;
+
+    using POGOProtos.Enums;
 
     using Xceed.Wpf.Toolkit.Primitives;
 
@@ -30,47 +34,54 @@
     /// </summary>
     public partial class MainWindow : Window, IComponentConnector
     {
-        private static BackgroundLoopingTask backgroundTask;
-        private static ListBoxWriter listBoxWriter;
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        private static readonly Random random = new Random();
-        private Logic logic;
+        #region Constructors
 
         public MainWindow()
         {
             InitializeComponent();
             Instance = this;
             Settings.Load();
-
-
             Model = Settings.MainWindowModel;
-
-            DataContext = Model;
-            int num;
-            backgroundTask = new BackgroundLoopingTask(() => num = Task.Run(async () =>
-            {
-                try
-                {
-                    PokemonGo.RocketAPI.Logger.SetLogger(new NLogLogger());
-                    await logic.Execute();
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex);
-                }
-                await Task.Delay(5000);
-                return true;
-            }).Result
-                ? 1
-                : 0);
-            SetupUi();
             Model.IsLoggedIn = true;
+            DataContext = Model;
+            var num = 0;
+            backgroundTask =
+                new BackgroundLoopingTask(() => num = Task.Run(async () =>
+                {
+                    try
+                    {
+                        PGB.Logic.Logging.Logger.SetLogger(new NLogLogger());
+                        await logic.Execute();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex);
+                    }
+                    await Task.Delay(5000);
+                    return true;
+                }).Result
+                    ? 1
+                    : 0);
+            SetupUI();
         }
 
+        #endregion
+
+        #region Fields, properties, indexers and constants
+
+        private static BackgroundLoopingTask backgroundTask;
+        private static ListBoxWriter listBoxWriter;
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Random random = new Random();
+        private Logic logic;
 
         public static MainWindow Instance { get; private set; }
 
         internal MainWindowModel Model { get; }
+
+        #endregion
+
+        #region Methods and other members
 
         private void btnOpenLogsDirectory_Click(object sender, RoutedEventArgs e)
         {
@@ -86,6 +97,12 @@
                 if (start)
                 {
                     logic = new Logic(Model);
+                    logic._client.Player.UpdatePositionEvent +=
+                        (Player.UpdatePositionDelegate)
+                            (async (lat, lng, alt) =>
+                                await
+                                    gMap.SafeAccessAsync(
+                                        g => g.Position = new PointLatLng(lat, lng)));
                     Model.Statistics = logic._stats;
                     await backgroundTask.Start();
                     Model.Status = "Running";
@@ -175,17 +192,12 @@
             return (PokemonId) Enum.Parse(typeof(PokemonId), value, true);
         }
 
-        private int RandomizeBreakMinutes(int setBreak)
-        {
-            return random.Next(Math.Max(setBreak - 10, 1), Math.Max(setBreak + 10, 5));
-        }
 
-        private void SetupUi()
+        private void SetupUI()
         {
             var generalSettings = Settings.GeneralSettings;
             listBoxWriter = new ListBoxWriter(lbLog);
-            Title =
-                $"MyGOBot v{(object) Assembly.GetExecutingAssembly().GetName().Version.ToString(3)} {(object) string.Empty}";
+            Title = $"PGB v{Assembly.GetExecutingAssembly().GetName().Version.ToString(3)} {string.Empty}";
             Console.SetOut(listBoxWriter);
             Console.SetError(listBoxWriter);
             if (generalSettings == null || generalSettings.WindowLeft <= 0.0 || generalSettings.WindowTop <= 0.0)
@@ -217,8 +229,28 @@
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            if (Model.PokemonsToCatch == null)
+            {
+                Model.PokemonsToEvolve = new List<PokemonId>();
+                Model.PokemonsToTransfer = new List<PokemonId>();
+                Model.PokemonsToCatch = new List<PokemonId>();
+
+            }
             foreach (PokemonId pokemonId in Enum.GetValues(typeof(PokemonId)))
             {
+                if (!Model.PokemonsToEvolve.Contains(pokemonId))
+                {
+                    Model.PokemonsToEvolve.Add(pokemonId);
+                }
+                if (!Model.PokemonsToTransfer.Contains(pokemonId))
+                {
+                    Model.PokemonsToTransfer.Add(pokemonId);
+                }
+                if (!Model.PokemonsToCatch.Contains(pokemonId))
+                {
+                    Model.PokemonsToCatch.Add(pokemonId);
+                }
+
                 if (Model.PokemonsToEvolve.Contains(pokemonId))
                 {
                     clbPokemonToEvolve.SelectedItems.Add(pokemonId.ToString());
@@ -233,10 +265,13 @@
                 }
             }
 
-            clbPokemonToEvolve.ItemSelectionChanged += clbPokemonToEvolve_ItemSelectionChanged;
-            clbPokemonToTransfer.ItemSelectionChanged += clbPokemonToTransfer_ItemSelectionChanged;
-            clbPokemonToCatch.ItemSelectionChanged += clbPokemonToCatch_ItemSelectionChanged;
-            logger.Info("Welcome to Pokemon Go Bot!");
+            clbPokemonToEvolve.ItemSelectionChanged +=
+                clbPokemonToEvolve_ItemSelectionChanged;
+            clbPokemonToTransfer.ItemSelectionChanged +=
+                clbPokemonToTransfer_ItemSelectionChanged;
+            clbPokemonToCatch.ItemSelectionChanged +=
+                clbPokemonToCatch_ItemSelectionChanged;
+            logger.Info("Welcome to PGB!");
             gMap.Position = new PointLatLng(Model.DefaultLatitude, Model.DefaultLongitude);
             gMap.DragButton = MouseButton.Left;
             gMap.CenterCrossPen =
@@ -244,9 +279,11 @@
                     new ImageBrush(
                         new BitmapImage(
                             new Uri(@"pack://application:,,,/"
-             + Assembly.GetExecutingAssembly().GetName().Name
-             + ";component/Resources/pokemon_ball_16x16.png",
+                                    + Assembly.GetExecutingAssembly().GetName().Name
+                                    + ";component/Resources/pokemon_ball_16x16.png",
                                 UriKind.Absolute))), 16.0);
         }
+
+        #endregion
     }
 }

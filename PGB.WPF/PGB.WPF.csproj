@@ -79,6 +79,9 @@
       <HintPath>..\packages\NLog.4.3.6\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="POGOProtos">
+      <HintPath>..\Custom packages\POGOProtos.dll</HintPath>
+    </Reference>
     <Reference Include="PokemonGo.RocketAPI">
       <HintPath>..\Custom packages\PokemonGo.RocketAPI.dll</HintPath>
     </Reference>
@@ -146,6 +149,7 @@
     <Compile Include="Internals\ApplicationEnvironment.cs" />
     <Compile Include="Internals\BackgroundLoopingTask.cs" />
     <Compile Include="Internals\CheckedListItem.cs" />
+    <Compile Include="Internals\DependencyObjectExtensions.cs" />
     <Compile Include="Internals\DispatcherObjectExtensions.cs" />
     <Compile Include="Internals\GeneralSettings.cs" />
     <Compile Include="Internals\HttpProvider.cs" />
@@ -229,6 +233,12 @@
     <Content Include="Resources\unchecked_checkbox_16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PGB.Logic\PGB.Logic.csproj">
+      <Project>{7e8bc1c3-d872-43e2-aea3-8ae0fe81aed5}</Project>
+      <Name>PGB.Logic</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\PostSharp.4.3.15\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.4.3.15\tools\PostSharp.targets')" />

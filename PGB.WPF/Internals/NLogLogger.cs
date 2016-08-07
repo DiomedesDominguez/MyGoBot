@@ -3,16 +3,16 @@
     using NLog;
     using System;
 
-    internal class NLogLogger : PokemonGo.RocketAPI.Logging.ILogger
+    internal class NLogLogger : PGB.Logic.Logging.ILogger
     {
-        private static readonly Logger Logger = LogManager.GetLogger("API");
+        private static NLog.Logger logger = LogManager.GetLogger("API");
 
-        public void Write(string message, PokemonGo.RocketAPI.LogLevel level = PokemonGo.RocketAPI.LogLevel.Info)
+        public void Write(string message, PGB.Logic.Logging.LogLevel level = PGB.Logic.Logging.LogLevel.Info)
         {
-            NLogLogger.Logger.Info(message);
+            NLogLogger.logger.Info(message);
         }
 
-        public void Write(string message, PokemonGo.RocketAPI.LogLevel level = PokemonGo.RocketAPI.LogLevel.Info, ConsoleColor color = ConsoleColor.Black)
+        public void Write(string message, PGB.Logic.Logging.LogLevel level = PGB.Logic.Logging.LogLevel.Info, ConsoleColor color = ConsoleColor.Black)
         {
             this.Write(message, level);
         }
